@@ -4,9 +4,11 @@ function GameManager(size, InputManager, Actuator, ScoreManager) {
   this.scoreManager = new ScoreManager;
   this.actuator     = new Actuator;
 
-  this.startTiles   = 2;
+  this.startTiles     = 2;
+  this.allowRollback  = false;
+  this.previousScore = 0;
 
-  this.inputManager.on("move", this.move.bind(this));
+  this.inputManager.on("move",    this.move.bind(this));
   this.inputManager.on("restart", this.restart.bind(this));
   this.inputManager.on("keepPlaying", this.keepPlaying.bind(this));
 
@@ -45,6 +47,7 @@ GameManager.prototype.setup = function () {
   // Add the initial tiles
   this.addStartTiles();
 
+  this.previousGrid = this.grid.clone();
   // Update the actuator
   this.actuate();
 };
@@ -99,10 +102,26 @@ GameManager.prototype.moveTile = function (tile, cell) {
   tile.updatePosition(cell);
 };
 
+GameManager.prototype.rollback = function() {
+  this.allowRollback = false;
+  this.grid          = this.previousGrid;
+  this.score = this.previousScore;
+
+  this.actuate();
+}
+
 // Move tiles on the grid in the specified direction
 GameManager.prototype.move = function (direction) {
-  // 0: up, 1: right, 2:down, 3: left
+  // 0: up, 1: right, 2:down, 3: left, z
   var self = this;
+  if( (direction == 'z' || direction == 'Z') && this.allowRollback) {  
+    return this.rollback();
+  }
+
+  this.previousGrid = this.grid.clone();
+  this.previousScore = this.score;
+
+  this.allowRollback = true;
 
   if (this.isGameTerminated()) return; // Don't do anything if the game's over
 

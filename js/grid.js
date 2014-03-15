@@ -1,9 +1,22 @@
 function Grid(size) {
   this.size = size;
-
-  this.cells = [];
+  this.cells = [] ;
 
   this.build();
+}
+
+Grid.prototype.clone = function() {
+
+  var clone = { cells: [], size: this.size }
+  Grid.prototype.build.call(clone)
+  this.eachCell(function(x, y, tile) {
+    if(tile) {
+      clone.cells[x][y] = tile.clone();
+    }
+  })
+  var grid = new Grid(this.size)
+  grid.cells = clone.cells
+  return grid;
 }
 
 // Build a grid of the specified size
